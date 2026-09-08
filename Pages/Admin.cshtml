@@ -1,0 +1,10 @@
+﻿@page
+@model HealthDataCollector.Pages.AdminModel
+@{
+    <h1>HealthDataCollector Admin</h1>
+
+    <form method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit">Enable Provisioning</button>
+    </form>
+}

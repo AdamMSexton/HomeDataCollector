@@ -1,9 +1,14 @@
 using HealthDataCollector.Models;
+using HealthDataCollector.Services;
 using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSingleton<IProvisioningService, ProvisioningService>();       // Register Provisioning gate keeper service.
+
 builder.Services.AddOpenApi();
+
+builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
@@ -15,7 +20,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapRazorPages();
 
+app.MapGet("/", () => Results.Redirect("/Admin"));
 
 app.MapPost("/api/weight", (WeightMeasurementDto dto, HttpContext context, ILogger<Program> logger) =>
     {
@@ -43,8 +50,13 @@ app.MapPost("/api/weight", (WeightMeasurementDto dto, HttpContext context, ILogg
         });
     });
 
-app.MapPost("/api/provision", (ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger) =>
+app.MapPost("/api/provision", (ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger, IProvisioningService provision) =>
     {
+        if (!provision.IsEnabled())
+        {
+            return Results.NotFound();
+        }
+
         var receivedAt = DateTimeOffset.UtcNow;
         var correlationId = context.TraceIdentifier;
 
@@ -66,6 +78,8 @@ app.MapPost("/api/provision", (ProvisionRequestDto dto, HttpContext context, ILo
             ApiKey = apiKey,
             CorrelationId = correlationId
         };
+
+        provision.Disable();
 
         return Results.Ok(response);
     });
