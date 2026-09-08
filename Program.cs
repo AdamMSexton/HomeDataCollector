@@ -1,3 +1,5 @@
+using HealthDataCollector.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
@@ -13,7 +15,33 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapGet("/", () => "Scale API");
+
+app.MapPost("/api/weight",
+    (WeightMeasurementDto dto, HttpContext context, ILogger<Program> logger) =>
+    {
+        var receivedAt = DateTimeOffset.UtcNow;
+        var correlationId = context.TraceIdentifier;
+
+        logger.LogDebug(
+                    "Received weight measurement {MeasurementId}: " +
+                    "{WeightKg} kg, Impedance={ImpedanceOhm} ohm, " +
+                    "MeasuredAt={MeasuredAt}, ReceivedAt={ReceivedAt}, " +
+                    "CorrelationId={CorrelationId}",
+                    dto.MeasurementId,
+                    dto.WeightKg,
+                    dto.ImpedanceOhm,
+                    dto.MeasuredAt,
+                    receivedAt,
+                    correlationId
+                );
+
+        return Results.Ok(new MeasurementAcceptedDto
+        {
+            MeasurementId = dto.MeasurementId,
+            ReceivedAt = receivedAt,
+            CorrelationId = correlationId
+        });
+    });
 
 
 app.Run();
