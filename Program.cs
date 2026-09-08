@@ -1,8 +1,13 @@
+using HealthDataCollector.Data.Control;
 using HealthDataCollector.Models;
 using HealthDataCollector.Services;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<ControlDbContext>(options =>                                  // Register SQLite Control context for settings and data
+    options.UseSqlite(builder.Configuration.GetConnectionString("ControlDatabase")));
 
 builder.Services.AddSingleton<IProvisioningService, ProvisioningService>();       // Register Provisioning gate keeper service.
 
