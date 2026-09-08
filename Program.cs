@@ -1,4 +1,5 @@
 using HealthDataCollector.Models;
+using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +17,7 @@ app.UseHttpsRedirection();
 
 
 
-app.MapPost("/api/weight",
-    (WeightMeasurementDto dto, HttpContext context, ILogger<Program> logger) =>
+app.MapPost("/api/weight", (WeightMeasurementDto dto, HttpContext context, ILogger<Program> logger) =>
     {
         var receivedAt = DateTimeOffset.UtcNow;
         var correlationId = context.TraceIdentifier;
@@ -43,6 +43,32 @@ app.MapPost("/api/weight",
         });
     });
 
+app.MapPost("/api/provision", (ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger) =>
+    {
+        var receivedAt = DateTimeOffset.UtcNow;
+        var correlationId = context.TraceIdentifier;
+
+        var sourceId = Guid.NewGuid();
+
+        var keyBytes = RandomNumberGenerator.GetBytes(32);
+        var apiKey = Convert.ToHexString(keyBytes);
+
+        logger.LogInformation(
+            "Provisioned source {SourceId}: {Name}, DeviceType={DeviceType}",
+            sourceId,
+            dto.Name,
+            dto.DeviceType
+        );
+
+        var response = new ProvisionResponseDto
+        {
+            SourceId = sourceId,
+            ApiKey = apiKey,
+            CorrelationId = correlationId
+        };
+
+        return Results.Ok(response);
+    });
 
 app.Run();
 
