@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using HealthDataCollector.Data.Control.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace HealthDataCollector.Data.Control
 {
@@ -7,6 +8,41 @@ namespace HealthDataCollector.Data.Control
         public ControlDbContext(DbContextOptions<ControlDbContext> options)
             : base(options)
         {
+        }
+
+        public DbSet<Source> Sources => Set<Source>();
+        public DbSet<Setting> Settings => Set<Setting>();
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Source>(entity =>
+            {
+                entity.HasKey(x => x.SourceId);
+
+                entity.Property(x => x.Name)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(x => x.DeviceType)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(x => x.ApiKeyHash)
+                    .IsRequired();
+            });
+
+            modelBuilder.Entity<Setting>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Key)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.HasIndex(x => x.Key)
+                    .IsUnique();
+            });
         }
     }
 }
