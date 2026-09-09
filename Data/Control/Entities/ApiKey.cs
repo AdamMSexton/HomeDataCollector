@@ -1,0 +1,23 @@
+﻿using HealthDataCollector.Enums;
+
+namespace HealthDataCollector.Data.Control.Entities
+{
+    public class ApiKey
+    {
+        public long id {  get; set; }
+        public Guid SourceId { get; set; }
+        public Source Source { get; set; } = null;
+        
+        public byte[] ApiKeyHash { get; set; }
+        
+        public DateTimeOffset? CreatedAt { get; set; }
+
+        public DateTimeOffset? ExpiresAt { get; set; }
+
+        public DateTimeOffset? RenewedAt { get; set; }
+
+        public KeyStatus Status { get; set; }
+
+
+    }
+}

@@ -8,16 +8,12 @@
 
         public string DeviceType { get; set; } = string.Empty;
 
-        public byte[] ApiKeyHash { get; set; }
-
-        public DateTimeOffset? ApiExpiration { get; set; }
-
-        public DateTimeOffset? ApiKeyRotatedAt { get; set; }
-
         public bool Enabled { get; set; } = true;
 
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset? LastSeenAt { get; set; }
+        
+        public ICollection<ApiKey> ApiKeys { get; set; } = [];
     }
 }

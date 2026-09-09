@@ -27,8 +27,27 @@ namespace HealthDataCollector.Data.Control
                 entity.Property(x => x.DeviceType)
                     .HasMaxLength(50)
                     .IsRequired();
+                
+                entity.Property(x => x.CreatedAt)
+                    .IsRequired();
+            });
 
-                entity.Property(x => x.ApiKeyHash)
+            modelBuilder.Entity<ApiKey>(entity =>
+            {
+                entity.HasKey(x => x.id);
+
+                entity.Property(x => x.SourceId)
+                    .IsRequired();
+
+                entity.HasOne(x => x.Source)
+                .WithMany(x => x.ApiKeys)
+                .HasForeignKey(x => x.SourceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(x => x.ApiKeyHash)
+                    .IsUnique();
+
+                entity.Property(x => x.Status)
                     .IsRequired();
             });
 
