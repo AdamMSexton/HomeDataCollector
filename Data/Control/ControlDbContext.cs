@@ -12,6 +12,7 @@ namespace HealthDataCollector.Data.Control
 
         public DbSet<Source> Sources => Set<Source>();
         public DbSet<Setting> Settings => Set<Setting>();
+        public DbSet<ApiKey> ApiKey => Set<ApiKey>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
