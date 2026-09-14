@@ -1,4 +1,5 @@
-﻿using HealthDataCollector.Models;
+﻿using HealthDataCollector.Enums;
+using HealthDataCollector.Models;
 
 namespace HealthDataCollector.Services
 {
@@ -9,6 +10,9 @@ namespace HealthDataCollector.Services
         void Enable();
 
         void Disable();
+        
         Task<ServiceResult<bool>> LoadSettingsAsync();
+
+        T GetSetting<T>(SettingName keyName);
     }
 }

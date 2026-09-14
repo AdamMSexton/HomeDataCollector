@@ -10,9 +10,9 @@ namespace HealthDataCollector.Data.Control.Entities
         
         public byte[] ApiKeyHash { get; set; }
         
-        public DateTimeOffset? CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
 
-        public DateTimeOffset? ExpiresAt { get; set; }
+        public DateTimeOffset ExpiresAt { get; set; }
 
         public DateTimeOffset? RenewedAt { get; set; }
 

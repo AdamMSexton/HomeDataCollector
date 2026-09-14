@@ -12,7 +12,7 @@ namespace HealthDataCollector.Data.Control
             {
                 db.Settings.Add(new Setting
                 {
-                    Key = "HealthDbConnectionString",
+                    Key = SettingName.HealthDbConnectionString.ToString(),
                     Value = "",
                     DataType = SettingDataType.String
                 });
@@ -22,7 +22,7 @@ namespace HealthDataCollector.Data.Control
             {
                 db.Settings.Add(new Setting
                 {
-                    Key = "ApiKeyLifetimeDays",
+                    Key = SettingName.ApiKeyLifetimeDays.ToString(),
                     Value = "90",
                     DataType = SettingDataType.Integer,
                     MinValue = "1",

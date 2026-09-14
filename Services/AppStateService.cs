@@ -67,5 +67,42 @@ namespace HealthDataCollector.Services
             return ServiceResult<bool>.Ok(true);
 
         }
+
+        public T GetSetting<T>(SettingName keyName)
+        {
+            string key = keyName.ToString();
+
+            if (!_settings.TryGetValue(key, out var setting))
+            {
+                throw new KeyNotFoundException(
+                    $"Setting '{key}' was not found.");
+            }
+
+            if (setting.Value is null)
+            {
+                throw new InvalidOperationException(
+                    $"Setting '{key}' has no value.");
+            }
+
+            SettingDataType requestedType = typeof(T) switch
+            {
+                var t when t == typeof(string) => SettingDataType.String,
+                var t when t == typeof(int) => SettingDataType.Integer,
+                var t when t == typeof(decimal) => SettingDataType.Decimal,
+                var t when t == typeof(bool) => SettingDataType.Boolean,
+
+                _ => throw new NotSupportedException(
+                    $"Setting type '{typeof(T).Name}' is not supported.")
+            };
+
+            if (setting.DataType != requestedType)
+            {
+                throw new InvalidOperationException(
+                    $"Setting '{key}' is stored as {setting.DataType}, " +
+                    $"but was requested as {requestedType}.");
+            }
+
+            return (T)Convert.ChangeType(setting.Value, typeof(T));
+        }
     }
 }

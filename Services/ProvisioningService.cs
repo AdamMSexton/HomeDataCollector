@@ -1,5 +1,6 @@
 ﻿using HealthDataCollector.Data.Control;
 using HealthDataCollector.Data.Control.Entities;
+using HealthDataCollector.Enums;
 using HealthDataCollector.Models;
 using System.Security.Cryptography;
 
@@ -52,7 +53,7 @@ namespace HealthDataCollector.Services
                 SourceId = sourceId,
                 ApiKeyHash = apiKeyHash,
                 CreatedAt = now,
-                ExpiresAt = now.AddDays(90),             // <=====  Change this to sue the settings when settings up and running.
+                ExpiresAt = now.AddDays(_ass.GetSetting<int>(SettingName.ApiKeyLifetimeDays)),             // <=====  Change this to sue the settings when settings up and running.
                 RenewedAt = null,
                 Status = HealthDataCollector.Enums.KeyStatus.Active
             };
@@ -71,6 +72,7 @@ namespace HealthDataCollector.Services
             {
                 SourceId = sourceId,
                 ApiKey = apiKey,
+                ApiKeyExpiration = newApiRecord.ExpiresAt,
                 CorrelationId = correlationId
             };
 
