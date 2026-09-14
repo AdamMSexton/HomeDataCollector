@@ -31,6 +31,17 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedAsync(db);
 }
 
+var appState = app.Services.GetRequiredService<IAppStateService>();
+
+var result = await appState.LoadSettingsAsync();
+
+if (!result.Success)
+{
+    app.Logger.LogInformation("Failed to load Settings.  {Error} {Message}.",
+        result.Error,
+        result.Message);
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -90,7 +101,7 @@ app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context
             if (!result.Success)
             {
                 logger.LogInformation(
-                    "Provision Failed: {Name}, DeviceType={DeviceType}. {Error} {Messagge}.",
+                    "Provision Failed: {Name}, DeviceType={DeviceType}. {Error} {Message}.",
                     dto.Name,
                     dto.DeviceType,
                     result.Error.ToString(),

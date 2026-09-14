@@ -1,4 +1,6 @@
-﻿namespace HealthDataCollector.Services
+﻿using HealthDataCollector.Models;
+
+namespace HealthDataCollector.Services
 {
     public interface IAppStateService
     {
@@ -7,5 +9,6 @@
         void Enable();
 
         void Disable();
+        Task<ServiceResult<bool>> LoadSettingsAsync();
     }
 }
