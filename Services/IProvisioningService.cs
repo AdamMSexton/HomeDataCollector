@@ -1,4 +1,6 @@
-﻿namespace HealthDataCollector.Services
+﻿using HealthDataCollector.Models;
+
+namespace HealthDataCollector.Services
 {
     public interface IProvisioningService
     {
@@ -7,5 +9,6 @@
         void Enable();
 
         void Disable();
+        Task<ServiceResult<ProvisionResponseDto>> ProvisionNewClient(string correlationId, ProvisionRequestDto request);
     }
 }

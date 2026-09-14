@@ -1,27 +1,80 @@
-﻿namespace HealthDataCollector.Services
+﻿using HealthDataCollector.Data.Control;
+using HealthDataCollector.Data.Control.Entities;
+using HealthDataCollector.Models;
+using System.Security.Cryptography;
+
+namespace HealthDataCollector.Services
 {
     public class ProvisioningService : IProvisioningService
     {
-        private DateTimeOffset? _enabledUntil;
+        
+        private readonly ControlDbContext _db;
+        private readonly AppStateService _ass;
+
+        public ProvisioningService(ControlDbContext db, AppStateService ass) 
+        {
+            _db = db;
+            _ass = ass;
+        }
 
         public bool IsEnabled()
         {
-            if ((_enabledUntil.HasValue) && (DateTimeOffset.UtcNow < _enabledUntil.Value))
-            {
-                return true;
-            }
-
-            return false;
+            return _ass.IsEnabled();
         }
 
         public void Enable()
         {
-            _enabledUntil = DateTimeOffset.UtcNow.AddMinutes(5);
+            _ass.Enable();
         }
 
         public void Disable()
         {
-            _enabledUntil = null;
+            _ass.Disable();
+        }
+
+        public async Task<ServiceResult<ProvisionResponseDto>> ProvisionNewClient(string correlationId, ProvisionRequestDto request)
+        {
+            var sourceId = Guid.NewGuid();
+
+            // Generate API key bytes
+            byte[] apiKeyBytes = RandomNumberGenerator.GetBytes(32);
+
+            // Convert API key bytes to Hex string
+            string apiKey = Convert.ToHexString(apiKeyBytes);
+
+            // Hash API key bytes for storage
+            byte[] apiKeyHash = SHA256.HashData(apiKeyBytes);
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+
+            ApiKey newApiRecord = new ApiKey
+            {
+                SourceId = sourceId,
+                ApiKeyHash = apiKeyHash,
+                CreatedAt = now,
+                ExpiresAt = now.AddDays(90),             // <=====  Change this to sue the settings when settings up and running.
+                RenewedAt = null,
+                Status = HealthDataCollector.Enums.KeyStatus.Active
+            };
+
+            Source newSourceRecord = new Source
+            {
+                SourceId = sourceId,
+                Name = request.Name,
+                DeviceType = request.DeviceType,
+                Enabled = true,
+                CreatedAt = now,
+                LastSeenAt = now,
+            };
+
+            var provisioningResult = new ProvisionResponseDto
+            {
+                SourceId = sourceId,
+                ApiKey = apiKey,
+                CorrelationId = correlationId
+            };
+
+            return ServiceResult<ProvisionResponseDto>.Ok(provisioningResult);
         }
     }
 }

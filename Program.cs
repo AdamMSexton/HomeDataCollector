@@ -1,6 +1,8 @@
 using HealthDataCollector.Data.Control;
+using HealthDataCollector.Data.Control.Entities;
 using HealthDataCollector.Models;
 using HealthDataCollector.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 
@@ -9,7 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ControlDbContext>(options =>                                  // Register SQLite Control context for settings and data
     options.UseSqlite(builder.Configuration.GetConnectionString("ControlDatabase")));
 
-builder.Services.AddSingleton<IProvisioningService, ProvisioningService>();       // Register Provisioning gate keeper service.
+builder.Services.AddSingleton<IAppStateService, AppStateService>();         // Register AppStateService for App State, Settings, and Cache data.
+builder.Services.AddScoped<IProvisioningService, ProvisioningService>();       // Register Provisioning gate keeper service.
 
 builder.Services.AddOpenApi();
 
@@ -65,38 +68,42 @@ app.MapPost("/api/weight", (WeightMeasurementDto dto, HttpContext context, ILogg
         });
     });
 
-app.MapPost("/api/provision", (ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger, IProvisioningService provision) =>
+app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger, IProvisioningService provision) =>
     {
         if (!provision.IsEnabled())
         {
             return Results.NotFound();
         }
 
-        var receivedAt = DateTimeOffset.UtcNow;
-        var correlationId = context.TraceIdentifier;
+        DateTimeOffset receivedAt = DateTimeOffset.UtcNow;
+        string correlationId = context.TraceIdentifier;
 
-        var sourceId = Guid.NewGuid();
+        ProvisionResponseDto provisioningResult = null;
 
-        var keyBytes = RandomNumberGenerator.GetBytes(32);
-        var apiKey = Convert.ToHexString(keyBytes);
+        using (var scope = app.Services.CreateScope())
+        {
+            var _ps = scope.ServiceProvider.GetRequiredService<IProvisioningService>();
+
+            var result = await _ps.ProvisionNewClient(correlationId, dto);
+            
+            if (!result.Success)
+            {
+                return Results.StatusCode(500);         // Return Failed
+            }
+            
+            provisioningResult = result.Data;
+        }
+
+        provision.Disable();
 
         logger.LogInformation(
             "Provisioned source {SourceId}: {Name}, DeviceType={DeviceType}",
-            sourceId,
+            provisioningResult.SourceId,
             dto.Name,
             dto.DeviceType
         );
 
-        var response = new ProvisionResponseDto
-        {
-            SourceId = sourceId,
-            ApiKey = apiKey,
-            CorrelationId = correlationId
-        };
-
-        provision.Disable();
-
-        return Results.Ok(response);
+        return Results.Ok(provisioningResult);
     });
 
 app.Run();
