@@ -49,7 +49,7 @@ namespace HealthDataCollector.Migrations
 
                     b.HasIndex("SourceId");
 
-                    b.ToTable("ApiKey");
+                    b.ToTable("ApiKeys");
                 });
 
             modelBuilder.Entity("HealthDataCollector.Data.Control.Entities.Setting", b =>

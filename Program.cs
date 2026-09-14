@@ -12,7 +12,8 @@ builder.Services.AddDbContext<ControlDbContext>(options =>                      
     options.UseSqlite(builder.Configuration.GetConnectionString("ControlDatabase")));
 
 builder.Services.AddSingleton<IAppStateService, AppStateService>();         // Register AppStateService for App State, Settings, and Cache data.
-builder.Services.AddScoped<IProvisioningService, ProvisioningService>();       // Register Provisioning gate keeper service.
+
+builder.Services.AddScoped<IProvisioningService, ProvisioningService>();       // Register Provisioning services.
 
 builder.Services.AddOpenApi();
 
@@ -88,12 +89,21 @@ app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context
             
             if (!result.Success)
             {
+                logger.LogInformation(
+                    "Provision Failed: {Name}, DeviceType={DeviceType}. {Error} {Messagge}.",
+                    dto.Name,
+                    dto.DeviceType,
+                    result.Error.ToString(),
+                    result.Message
+                );
+
                 return Results.StatusCode(500);         // Return Failed
             }
             
             provisioningResult = result.Data;
         }
 
+        // If we get here provisionin was successful
         provision.Disable();
 
         logger.LogInformation(

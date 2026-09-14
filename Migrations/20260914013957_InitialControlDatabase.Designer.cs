@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HealthDataCollector.Migrations
 {
     [DbContext(typeof(ControlDbContext))]
-    [Migration("20260909022120_InitialControlDatabase")]
+    [Migration("20260914013957_InitialControlDatabase")]
     partial class InitialControlDatabase
     {
         /// <inheritdoc />
@@ -52,7 +52,7 @@ namespace HealthDataCollector.Migrations
 
                     b.HasIndex("SourceId");
 
-                    b.ToTable("ApiKey");
+                    b.ToTable("ApiKeys");
                 });
 
             modelBuilder.Entity("HealthDataCollector.Data.Control.Entities.Setting", b =>

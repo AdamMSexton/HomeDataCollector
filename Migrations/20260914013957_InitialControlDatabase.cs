@@ -45,7 +45,7 @@ namespace HealthDataCollector.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ApiKey",
+                name: "ApiKeys",
                 columns: table => new
                 {
                     id = table.Column<long>(type: "INTEGER", nullable: false)
@@ -59,9 +59,9 @@ namespace HealthDataCollector.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ApiKey", x => x.id);
+                    table.PrimaryKey("PK_ApiKeys", x => x.id);
                     table.ForeignKey(
-                        name: "FK_ApiKey_Sources_SourceId",
+                        name: "FK_ApiKeys_Sources_SourceId",
                         column: x => x.SourceId,
                         principalTable: "Sources",
                         principalColumn: "SourceId",
@@ -69,14 +69,14 @@ namespace HealthDataCollector.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ApiKey_ApiKeyHash",
-                table: "ApiKey",
+                name: "IX_ApiKeys_ApiKeyHash",
+                table: "ApiKeys",
                 column: "ApiKeyHash",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ApiKey_SourceId",
-                table: "ApiKey",
+                name: "IX_ApiKeys_SourceId",
+                table: "ApiKeys",
                 column: "SourceId");
 
             migrationBuilder.CreateIndex(
@@ -90,7 +90,7 @@ namespace HealthDataCollector.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ApiKey");
+                name: "ApiKeys");
 
             migrationBuilder.DropTable(
                 name: "Settings");

@@ -9,9 +9,9 @@ namespace HealthDataCollector.Services
     {
         
         private readonly ControlDbContext _db;
-        private readonly AppStateService _ass;
+        private readonly IAppStateService _ass;
 
-        public ProvisioningService(ControlDbContext db, AppStateService ass) 
+        public ProvisioningService(ControlDbContext db, IAppStateService ass) 
         {
             _db = db;
             _ass = ass;
@@ -73,6 +73,23 @@ namespace HealthDataCollector.Services
                 ApiKey = apiKey,
                 CorrelationId = correlationId
             };
+
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+
+            try
+            {
+                _db.Sources.Add(newSourceRecord);
+                _db.ApiKeys.Add(newApiRecord);
+
+                await _db.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return ServiceResult<ProvisionResponseDto>.Fail(Enums.ServiceError.Database, ex.Message);
+            }
 
             return ServiceResult<ProvisionResponseDto>.Ok(provisioningResult);
         }

@@ -4,8 +4,10 @@
     {
         None,
         NotFound,
+        NotAllowed,
         Validation,
         Conflict,
+        Database,
         Internal
     }
 }
