@@ -98,10 +98,18 @@ namespace HealthDataCollector.Services
             return ServiceResult<ProvisionResponseDto>.Ok(provisioningResult);
         }
     
-        public async Task<ServiceResult<Guid>> ValidateApiKey(string providedApiKey)
+        public async Task<ServiceResult<Guid>> ValidateApiKeyAsync(string providedApiKey)
         {
             // Convert from Hex string to bytes
-            byte[] apiKeyBytes = Convert.FromHexString(providedApiKey);
+            byte[] apiKeyBytes;
+            try
+            {
+                apiKeyBytes = Convert.FromHexString(providedApiKey);
+            }
+            catch (FormatException)
+            {
+                return ServiceResult<Guid>.Fail(ServiceError.ApiKeyNotFound, ServiceMessages.ApiKeyNotFound);
+            }
 
             // Hash Api key bytes ti search DB
             byte[] apiKeyHash = SHA256.HashData(apiKeyBytes);
@@ -111,6 +119,15 @@ namespace HealthDataCollector.Services
             if (matchedApiKey == null)
             {
                 return ServiceResult<Guid>.Fail(ServiceError.ApiKeyNotFound, ServiceMessages.ApiKeyNotFound);
+            }
+
+            if (matchedApiKey.Status == KeyStatus.Active)
+            {
+                if (matchedApiKey.ExpiresAt <= DateTimeOffset.UtcNow)
+                {
+                    matchedApiKey.Status = KeyStatus.Expired;
+                    await _db.SaveChangesAsync();
+                }
             }
 
             switch (matchedApiKey.Status)

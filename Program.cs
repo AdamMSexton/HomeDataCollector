@@ -54,10 +54,24 @@ app.MapRazorPages();
 
 app.MapGet("/", () => Results.Redirect("/Admin"));
 
-app.MapPost("/api/weight", (WeightMeasurementDto dto, HttpContext context, ILogger<Program> logger) =>
+app.MapPost("/api/weight", async(WeightMeasurementDto dto, HttpContext context, ILogger<Program> logger, ISourceService _ps) =>
     {
         var receivedAt = DateTimeOffset.UtcNow;
         var correlationId = context.TraceIdentifier;
+
+        if (!context.Request.Headers.TryGetValue("X-Api-Key", out var apiKey))
+        {
+            return Results.Unauthorized();
+        }
+
+        var result = await _ps.ValidateApiKeyAsync(apiKey);
+
+        if (!result.Success)
+        {
+            logger.LogDebug("API Error: {Error}", result.Message);
+        }
+
+        logger.LogDebug("Device Id: {DeviceId}.", result.Data.ToString());
 
         logger.LogDebug(
                     "Received weight measurement {MeasurementId}: " +
@@ -80,9 +94,9 @@ app.MapPost("/api/weight", (WeightMeasurementDto dto, HttpContext context, ILogg
         });
     });
 
-app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger, ISourceService provision) =>
+app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger, ISourceService _ps) =>
     {
-        if (!provision.IsEnabled())
+        if (!_ps.IsEnabled())
         {
             return Results.NotFound();
         }
@@ -90,32 +104,26 @@ app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context
         DateTimeOffset receivedAt = DateTimeOffset.UtcNow;
         string correlationId = context.TraceIdentifier;
 
-        ProvisionResponseDto provisioningResult = null;
-
-        using (var scope = app.Services.CreateScope())
+        var result = await _ps.ProvisionNewDevice(correlationId, dto);
+            
+        if (!result.Success)
         {
-            var _ps = scope.ServiceProvider.GetRequiredService<ISourceService>();
+            logger.LogInformation(
+                "Provision Failed: {Name}, DeviceType={DeviceType}. {Error} {Message}.",
+                dto.Name,
+                dto.DeviceType,
+                result.Error.ToString(),
+                result.Message
+            );
 
-            var result = await _ps.ProvisionNewDevice(correlationId, dto);
-            
-            if (!result.Success)
-            {
-                logger.LogInformation(
-                    "Provision Failed: {Name}, DeviceType={DeviceType}. {Error} {Message}.",
-                    dto.Name,
-                    dto.DeviceType,
-                    result.Error.ToString(),
-                    result.Message
-                );
-
-                return Results.StatusCode(500);         // Return Failed
-            }
-            
-            provisioningResult = result.Data;
+            return Results.StatusCode(500);         // Return Failed
         }
 
+        ProvisionResponseDto provisioningResult = result.Data;
+
+
         // If we get here provisioning was successful
-        provision.Disable();
+        _ps.Disable();
 
         logger.LogInformation(
             "Provisioned source {SourceId}: {Name}, DeviceType={DeviceType}",
