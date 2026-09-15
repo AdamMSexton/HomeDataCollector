@@ -35,6 +35,36 @@ namespace HealthDataCollector.Services
             _ass.Disable();
         }
 
+        private async Task<ServiceResult<ApiKey>> FindApiKey(byte[] providedApiKey)
+        {
+            // Check for null or incorrect byte length
+            if ((providedApiKey.Length != 32) || (providedApiKey == null))
+            {
+                return ServiceResult<ApiKey>.Fail(ServiceError.Validation, ServiceMessages.ImproperFormat);
+            }
+
+            // Hash Api key bytes it search DB
+            byte[] apiKeyHash = SHA256.HashData(providedApiKey);
+
+            ApiKey? matchedApiKey = await _db.ApiKeys.FirstOrDefaultAsync(x => x.ApiKeyHash == apiKeyHash);
+
+            if (matchedApiKey == null)
+            {
+                return ServiceResult<ApiKey>.Fail(ServiceError.ApiKeyNotFound, ServiceMessages.ApiKeyNotFound);
+            }
+
+            if ((matchedApiKey.Status == KeyStatus.Active) || (matchedApiKey.Status == KeyStatus.RenewalOnly))
+            {
+                if (matchedApiKey.ExpiresAt <= DateTimeOffset.UtcNow)
+                {
+                    matchedApiKey.Status = KeyStatus.Expired;
+                    await _db.SaveChangesAsync();
+                }
+            }
+
+            return ServiceResult<ApiKey>.Ok(matchedApiKey);
+        }
+
         public async Task<ServiceResult<ApiKeyIssueDto>> ProvisionNewDevice(string correlationId, ProvisionRequestDto request)
         {
             var sourceId = Guid.NewGuid();
@@ -100,8 +130,8 @@ namespace HealthDataCollector.Services
     
         public async Task<ServiceResult<Guid>> ValidateApiKeyAsync(string providedApiKey)
         {
-            // Convert from Hex string to bytes
             byte[] apiKeyBytes;
+            // Convert from Hex string to bytes
             try
             {
                 apiKeyBytes = Convert.FromHexString(providedApiKey);
@@ -111,24 +141,14 @@ namespace HealthDataCollector.Services
                 return ServiceResult<Guid>.Fail(ServiceError.ApiKeyNotFound, ServiceMessages.ApiKeyNotFound);
             }
 
-            // Hash Api key bytes ti search DB
-            byte[] apiKeyHash = SHA256.HashData(apiKeyBytes);
-
-            ApiKey? matchedApiKey =  await _db.ApiKeys.FirstOrDefaultAsync(x => x.ApiKeyHash == apiKeyHash);
-
-            if (matchedApiKey == null)
+            // Get Api Record
+            var result = await FindApiKey(apiKeyBytes);
+            if ((!result.Success) || (result.Data == null))
             {
-                return ServiceResult<Guid>.Fail(ServiceError.ApiKeyNotFound, ServiceMessages.ApiKeyNotFound);
+                return ServiceResult<Guid>.Fail(result.Error, result.Message ?? "Unknown.");
             }
 
-            if (matchedApiKey.Status == KeyStatus.Active)
-            {
-                if (matchedApiKey.ExpiresAt <= DateTimeOffset.UtcNow)
-                {
-                    matchedApiKey.Status = KeyStatus.Expired;
-                    await _db.SaveChangesAsync();
-                }
-            }
+            ApiKey matchedApiKey = result.Data;
 
             switch (matchedApiKey.Status)
             {
