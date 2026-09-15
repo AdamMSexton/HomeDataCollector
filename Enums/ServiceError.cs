@@ -8,6 +8,12 @@
         Validation,
         Conflict,
         Database,
-        Internal
+        Internal,
+
+        ApiKeyNotFound,
+        ApiKeyExpired,
+        ApiKeyRevoked,
+        ApiKeyRenewed
+
     }
 }

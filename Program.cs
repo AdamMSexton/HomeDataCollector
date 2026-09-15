@@ -13,7 +13,7 @@ builder.Services.AddDbContext<ControlDbContext>(options =>                      
 
 builder.Services.AddSingleton<IAppStateService, AppStateService>();         // Register AppStateService for App State, Settings, and Cache data.
 
-builder.Services.AddScoped<IProvisioningService, ProvisioningService>();       // Register Provisioning services.
+builder.Services.AddScoped<ISourceService, SourceService>();       // Register Provisioning services.
 
 builder.Services.AddOpenApi();
 
@@ -80,7 +80,7 @@ app.MapPost("/api/weight", (WeightMeasurementDto dto, HttpContext context, ILogg
         });
     });
 
-app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger, IProvisioningService provision) =>
+app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger, ISourceService provision) =>
     {
         if (!provision.IsEnabled())
         {
@@ -94,9 +94,9 @@ app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context
 
         using (var scope = app.Services.CreateScope())
         {
-            var _ps = scope.ServiceProvider.GetRequiredService<IProvisioningService>();
+            var _ps = scope.ServiceProvider.GetRequiredService<ISourceService>();
 
-            var result = await _ps.ProvisionNewClient(correlationId, dto);
+            var result = await _ps.ProvisionNewDevice(correlationId, dto);
             
             if (!result.Success)
             {
@@ -114,7 +114,7 @@ app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context
             provisioningResult = result.Data;
         }
 
-        // If we get here provisionin was successful
+        // If we get here provisioning was successful
         provision.Disable();
 
         logger.LogInformation(

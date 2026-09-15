@@ -6,6 +6,7 @@ namespace HealthDataCollector.Enums
     {
         Active,
         RenewalOnly,
+        Expired,
         Revoked
     }
 }

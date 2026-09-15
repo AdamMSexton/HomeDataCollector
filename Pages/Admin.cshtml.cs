@@ -6,9 +6,9 @@ namespace HealthDataCollector.Pages
 {
     public class AdminModel : PageModel
     {
-        private readonly IProvisioningService _provisioning;
+        private readonly ISourceService _provisioning;
 
-        public AdminModel(IProvisioningService provisioning)
+        public AdminModel(ISourceService provisioning)
         {
             _provisioning = provisioning;
         }

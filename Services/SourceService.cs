@@ -1,18 +1,20 @@
 ﻿using HealthDataCollector.Data.Control;
 using HealthDataCollector.Data.Control.Entities;
 using HealthDataCollector.Enums;
+using HealthDataCollector.Constants;
 using HealthDataCollector.Models;
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 
 namespace HealthDataCollector.Services
 {
-    public class ProvisioningService : IProvisioningService
+    public class SourceService : ISourceService
     {
         
         private readonly ControlDbContext _db;
         private readonly IAppStateService _ass;
 
-        public ProvisioningService(ControlDbContext db, IAppStateService ass) 
+        public SourceService(ControlDbContext db, IAppStateService ass) 
         {
             _db = db;
             _ass = ass;
@@ -33,7 +35,7 @@ namespace HealthDataCollector.Services
             _ass.Disable();
         }
 
-        public async Task<ServiceResult<ProvisionResponseDto>> ProvisionNewClient(string correlationId, ProvisionRequestDto request)
+        public async Task<ServiceResult<ProvisionResponseDto>> ProvisionNewDevice(string correlationId, ProvisionRequestDto request)
         {
             var sourceId = Guid.NewGuid();
 
@@ -94,6 +96,46 @@ namespace HealthDataCollector.Services
             }
 
             return ServiceResult<ProvisionResponseDto>.Ok(provisioningResult);
+        }
+    
+        public async Task<ServiceResult<Guid>> ValidateApiKey(string providedApiKey)
+        {
+            // Convert from Hex string to bytes
+            byte[] apiKeyBytes = Convert.FromHexString(providedApiKey);
+
+            // Hash Api key bytes ti search DB
+            byte[] apiKeyHash = SHA256.HashData(apiKeyBytes);
+
+            ApiKey? matchedApiKey =  await _db.ApiKeys.FirstOrDefaultAsync(x => x.ApiKeyHash == apiKeyHash);
+
+            if (matchedApiKey == null)
+            {
+                return ServiceResult<Guid>.Fail(ServiceError.ApiKeyNotFound, ServiceMessages.ApiKeyNotFound);
+            }
+
+            switch (matchedApiKey.Status)
+            {
+                case KeyStatus.Expired:
+                    {
+                        return ServiceResult<Guid>.Fail(ServiceError.ApiKeyExpired, ServiceMessages.ApiKeyExpired);
+                    }
+                case KeyStatus.Revoked:
+                    {
+                        return ServiceResult<Guid>.Fail(ServiceError.ApiKeyRevoked, ServiceMessages.ApiKeyRevoked);
+                    }
+                case KeyStatus.RenewalOnly:
+                    {
+                        return ServiceResult<Guid>.Fail(ServiceError.ApiKeyRenewed, ServiceMessages.ApiKeyRenewed);
+                    }
+                case KeyStatus.Active:
+                    {
+                        return ServiceResult<Guid>.Ok(matchedApiKey.SourceId);
+                    }
+
+            }
+
+            // Only get there if an invalid api status was attached to the key in DB.
+            return ServiceResult<Guid>.Fail(ServiceError.Internal, "Unknown Error. Status: '" + matchedApiKey.Status.ToString() + "' is unknown.");
         }
     }
 }
