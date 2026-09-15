@@ -35,7 +35,7 @@ namespace HealthDataCollector.Data.Control
 
             modelBuilder.Entity<ApiKey>(entity =>
             {
-                entity.HasKey(x => x.id);
+                entity.HasKey(x => x.Id);
 
                 entity.Property(x => x.SourceId)
                     .IsRequired();

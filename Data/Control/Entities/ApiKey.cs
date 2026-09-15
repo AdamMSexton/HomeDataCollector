@@ -4,7 +4,7 @@ namespace HealthDataCollector.Data.Control.Entities
 {
     public class ApiKey
     {
-        public long id {  get; set; }
+        public long Id {  get; set; }
         public Guid SourceId { get; set; }
         public Source Source { get; set; } = null;
         

@@ -35,6 +35,46 @@ namespace HealthDataCollector.Services
             _ass.Disable();
         }
 
+        private async Task<ServiceResult<bool>> CompleteApiRenewal(Guid sourceId,long apiKeyId)
+        {
+            // Get all keys belonging to sourceId
+            var apiKeyList = await _db.ApiKeys.Where(x => x.SourceId == sourceId).ToListAsync();
+            
+            if (apiKeyList.Count == 0)
+            {
+                return ServiceResult<bool>.Fail(ServiceError.NotFound, ServiceMessages.SourceNotFound);
+            }
+
+            // Find the expected final active key
+            var keyToActivate = apiKeyList.FirstOrDefault(x => x.Id == apiKeyId && x.Status == KeyStatus.ActiveRenewed);
+
+            // Key not found
+            if (keyToActivate is null)
+            {
+                return ServiceResult<bool>.Fail(ServiceError.ApiKeyNotFound,ServiceMessages.ApiKeyNotFound);
+            }
+
+
+            foreach (var apiKey in apiKeyList)
+            {
+                if ((apiKey.Status != KeyStatus.Revoked) && (apiKey.Status != KeyStatus.Expired))
+                {
+                    if ((apiKey.Status == KeyStatus.ActiveRenewed) && (apiKey.Id == keyToActivate.Id))
+                    {
+                        apiKey.Status = KeyStatus.Active;
+                    }
+                    else
+                    {
+                        apiKey.Status = KeyStatus.Revoked;
+                    }
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            return ServiceResult<bool>.Ok(true);
+        }
+
         private async Task<ServiceResult<ApiKey>> FindApiKey(byte[] providedApiKey)
         {
             // Check for null or incorrect byte length
@@ -142,13 +182,13 @@ namespace HealthDataCollector.Services
             }
 
             // Get Api Record
-            var result = await FindApiKey(apiKeyBytes);
-            if ((!result.Success) || (result.Data == null))
+            var findApiKeyResult = await FindApiKey(apiKeyBytes);
+            if ((!findApiKeyResult.Success) || (findApiKeyResult.Data == null))
             {
-                return ServiceResult<Guid>.Fail(result.Error, result.Message ?? "Unknown.");
+                return ServiceResult<Guid>.Fail(findApiKeyResult.Error, findApiKeyResult.Message ?? "Unknown.");
             }
 
-            ApiKey matchedApiKey = result.Data;
+            ApiKey matchedApiKey = findApiKeyResult.Data;
 
             switch (matchedApiKey.Status)
             {
@@ -163,6 +203,16 @@ namespace HealthDataCollector.Services
                 case KeyStatus.RenewalOnly:
                     {
                         return ServiceResult<Guid>.Fail(ServiceError.ApiKeyRenewed, ServiceMessages.ApiKeyRenewed);
+                    }
+                case KeyStatus.ActiveRenewed:
+                    {
+                        var renewCompleteResult = await CompleteApiRenewal(matchedApiKey.SourceId, matchedApiKey.Id);
+                        if (!renewCompleteResult.Success)
+                        {
+                            return ServiceResult<Guid>.Fail(renewCompleteResult.Error, renewCompleteResult.Message ?? "Unknown");
+                        }
+                        // Find and revoke old key, change new key to KeyStatus.Active
+                        break;
                     }
                 case KeyStatus.Active:
                     {
