@@ -9,7 +9,7 @@ namespace HealthDataCollector.Services
         void Enable();
 
         void Disable();
-        Task<ServiceResult<ProvisionResponseDto>> ProvisionNewDevice(string correlationId, ProvisionRequestDto request);
+        Task<ServiceResult<ApiKeyIssueDto>> ProvisionNewDevice(string correlationId, ProvisionRequestDto request);
         Task<ServiceResult<Guid>> ValidateApiKeyAsync(string providedApiKey);
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace HealthDataCollector.Models
 {
-    public class ProvisionResponseDto
+    public class ApiKeyIssueDto
     {
         public Guid SourceId { get; set; }
         public string ApiKey { get; set; } = string.Empty;

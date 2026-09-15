@@ -119,7 +119,7 @@ app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context
             return Results.StatusCode(500);         // Return Failed
         }
 
-        ProvisionResponseDto provisioningResult = result.Data;
+        ApiKeyIssueDto provisioningResult = result.Data;
 
 
         // If we get here provisioning was successful

@@ -35,7 +35,7 @@ namespace HealthDataCollector.Services
             _ass.Disable();
         }
 
-        public async Task<ServiceResult<ProvisionResponseDto>> ProvisionNewDevice(string correlationId, ProvisionRequestDto request)
+        public async Task<ServiceResult<ApiKeyIssueDto>> ProvisionNewDevice(string correlationId, ProvisionRequestDto request)
         {
             var sourceId = Guid.NewGuid();
 
@@ -70,7 +70,7 @@ namespace HealthDataCollector.Services
                 LastSeenAt = now,
             };
 
-            var provisioningResult = new ProvisionResponseDto
+            var provisioningResult = new ApiKeyIssueDto
             {
                 SourceId = sourceId,
                 ApiKey = apiKey,
@@ -92,10 +92,10 @@ namespace HealthDataCollector.Services
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return ServiceResult<ProvisionResponseDto>.Fail(Enums.ServiceError.Database, ex.Message);
+                return ServiceResult<ApiKeyIssueDto>.Fail(Enums.ServiceError.Database, ex.Message);
             }
 
-            return ServiceResult<ProvisionResponseDto>.Ok(provisioningResult);
+            return ServiceResult<ApiKeyIssueDto>.Ok(provisioningResult);
         }
     
         public async Task<ServiceResult<Guid>> ValidateApiKeyAsync(string providedApiKey)
@@ -153,6 +153,11 @@ namespace HealthDataCollector.Services
 
             // Only get there if an invalid api status was attached to the key in DB.
             return ServiceResult<Guid>.Fail(ServiceError.Internal, "Unknown Error. Status: '" + matchedApiKey.Status.ToString() + "' is unknown.");
+        }
+    
+        public async Task<ServiceResult<ApiKeyIssueDto>> RenewApiKeyAsync(string providedApiKey)
+        {
+
         }
     }
 }
