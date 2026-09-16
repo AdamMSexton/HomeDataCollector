@@ -54,12 +54,78 @@ app.MapRazorPages();
 
 app.MapGet("/", () => Results.Redirect("/Admin"));
 
+app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger, ISourceService _ps) =>
+    {
+        if (!_ps.IsEnabled())
+        {
+            return Results.NotFound();
+        }
+
+        DateTimeOffset receivedAt = DateTimeOffset.UtcNow;
+        string correlationId = context.TraceIdentifier;
+
+        var result = await _ps.ProvisionNewDevice(correlationId, dto);
+            
+        if ((!result.Success) || (result.Data == null))
+        {
+            logger.LogInformation(
+                "Provision Failed: {Name}, DeviceType={DeviceType}. {Error} {Message}.",
+                dto.Name,
+                dto.DeviceType,
+                result.Error.ToString(),
+                result.Message
+            );
+
+            return Results.StatusCode(500);         // Return Failed
+        }
+
+        ApiKeyIssueDto provisioningResult = result.Data;
+
+
+        // If we get here provisioning was successful
+        _ps.Disable();
+
+        logger.LogInformation(
+            "Provisioned source {SourceId}: {Name}, DeviceType={DeviceType}",
+            provisioningResult.SourceId,
+            dto.Name,
+            dto.DeviceType
+        );
+
+        return Results.Ok(provisioningResult);
+    });
+
+app.MapPost("/api/key/renew", async (HttpContext context, ILogger<Program> Logger, ISourceService _ps) =>
+    {
+        var receivedAt = DateTimeOffset.UtcNow;
+        var correlationId = context.TraceIdentifier;
+
+        if (!context.Request.Headers.TryGetValue("X-Api-Key", out var apiKeyHeader))
+        {
+            return Results.Unauthorized();
+        }
+        string apiKey = apiKeyHeader.ToString();
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            return Results.Unauthorized();
+        }
+
+        var result = await _ps.StartApiRenewalAsync(correlationId, apiKey);
+
+        return Results.Ok();
+    });
+
 app.MapPost("/api/weight", async(WeightMeasurementDto dto, HttpContext context, ILogger<Program> logger, ISourceService _ps) =>
     {
         var receivedAt = DateTimeOffset.UtcNow;
         var correlationId = context.TraceIdentifier;
 
-        if (!context.Request.Headers.TryGetValue("X-Api-Key", out var apiKey))
+        if (!context.Request.Headers.TryGetValue("X-Api-Key", out var apiKeyHeader))
+        {
+            return Results.Unauthorized();
+        }
+        string apiKey = apiKeyHeader.ToString();
+        if (string.IsNullOrEmpty(apiKey))
         {
             return Results.Unauthorized();
         }
@@ -93,47 +159,5 @@ app.MapPost("/api/weight", async(WeightMeasurementDto dto, HttpContext context, 
             CorrelationId = correlationId
         });
     });
-
-app.MapPost("/api/provision", async(ProvisionRequestDto dto, HttpContext context, ILogger < Program> logger, ISourceService _ps) =>
-    {
-        if (!_ps.IsEnabled())
-        {
-            return Results.NotFound();
-        }
-
-        DateTimeOffset receivedAt = DateTimeOffset.UtcNow;
-        string correlationId = context.TraceIdentifier;
-
-        var result = await _ps.ProvisionNewDevice(correlationId, dto);
-            
-        if (!result.Success)
-        {
-            logger.LogInformation(
-                "Provision Failed: {Name}, DeviceType={DeviceType}. {Error} {Message}.",
-                dto.Name,
-                dto.DeviceType,
-                result.Error.ToString(),
-                result.Message
-            );
-
-            return Results.StatusCode(500);         // Return Failed
-        }
-
-        ApiKeyIssueDto provisioningResult = result.Data;
-
-
-        // If we get here provisioning was successful
-        _ps.Disable();
-
-        logger.LogInformation(
-            "Provisioned source {SourceId}: {Name}, DeviceType={DeviceType}",
-            provisioningResult.SourceId,
-            dto.Name,
-            dto.DeviceType
-        );
-
-        return Results.Ok(provisioningResult);
-    });
-
 app.Run();
 

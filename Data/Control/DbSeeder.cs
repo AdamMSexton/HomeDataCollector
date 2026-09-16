@@ -30,6 +30,18 @@ namespace HealthDataCollector.Data.Control
                 });
             }
 
+            if (!await db.Settings.AnyAsync(x => x.Key == "ApiKeyRenewalWindowDays"))
+            {
+                db.Settings.Add(new Setting
+                {
+                    Key = SettingName.ApiKeyRenewalWindowDays.ToString(),
+                    Value = "7",
+                    DataType = SettingDataType.Integer,
+                    MinValue = "1",
+                    MaxValue = "90"
+                });
+            }
+
             await db.SaveChangesAsync();
         }
     }

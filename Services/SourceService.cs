@@ -120,17 +120,17 @@ namespace HealthDataCollector.Services
 
             DateTimeOffset now = DateTimeOffset.UtcNow;
 
-            ApiKey newApiRecord = new ApiKey
+            ApiKey newApiRecord = new()
             {
                 SourceId = sourceId,
                 ApiKeyHash = apiKeyHash,
                 CreatedAt = now,
-                ExpiresAt = now.AddDays(_ass.GetSetting<int>(SettingName.ApiKeyLifetimeDays)),             // <=====  Change this to sue the settings when settings up and running.
+                ExpiresAt = now.AddDays(_ass.GetSetting<int>(SettingName.ApiKeyLifetimeDays)),
                 RenewedAt = null,
                 Status = HealthDataCollector.Enums.KeyStatus.Active
             };
 
-            Source newSourceRecord = new Source
+            Source newSourceRecord = new()
             {
                 SourceId = sourceId,
                 Name = request.Name,
@@ -225,9 +225,79 @@ namespace HealthDataCollector.Services
             return ServiceResult<Guid>.Fail(ServiceError.Internal, "Unknown Error. Status: '" + matchedApiKey.Status.ToString() + "' is unknown.");
         }
     
-        public async Task<ServiceResult<ApiKeyIssueDto>> RenewApiKeyAsync(string providedApiKey)
+        public async Task<ServiceResult<ApiKeyIssueDto>> StartApiRenewalAsync(string correlationId, string providedApiKey)
         {
+            byte[] apiKeyBytes;
+            // Convert from Hex string to bytes
+            try
+            {
+                apiKeyBytes = Convert.FromHexString(providedApiKey);
+            }
+            catch (FormatException)
+            {
+                return ServiceResult<ApiKeyIssueDto>.Fail(ServiceError.ApiKeyNotFound, ServiceMessages.ApiKeyNotFound);
+            }
 
+            // Get Api Record
+            var findApiKeyResult = await FindApiKey(apiKeyBytes);
+            if ((!findApiKeyResult.Success) || (findApiKeyResult.Data == null))
+            {
+                return ServiceResult<ApiKeyIssueDto>.Fail(findApiKeyResult.Error, findApiKeyResult.Message ?? "Unknown.");
+            }
+
+            var apiKeyToRenew = findApiKeyResult.Data;
+
+            DateTimeOffset renewalWindowOpen = apiKeyToRenew.ExpiresAt.AddDays(-1 * _ass.GetSetting<int>(SettingName.ApiKeyRenewalWindowDays));
+
+            // Check to see if we are in renewal window.
+            if (renewalWindowOpen >= DateTimeOffset.UtcNow)
+            {
+                return ServiceResult<ApiKeyIssueDto>.Fail(ServiceError.ApiKeyOutsideRenewalWin, ServiceMessages.ApiKeyTooEarlyRenew);
+            }
+
+            // Generate new API key
+            byte[] newApiKeyBytes = RandomNumberGenerator.GetBytes(32);
+            string newApiKeyHex = Convert.ToHexString(newApiKeyBytes);
+            byte[] newApiKeyHash = SHA256.HashData(newApiKeyBytes);
+
+            ApiKeyIssueDto newApiKeyReturnToDevice = new()
+            {
+                SourceId = apiKeyToRenew.SourceId,
+                ApiKey = newApiKeyHex,
+                ApiKeyExpiration = DateTimeOffset.UtcNow.AddDays(_ass.GetSetting<int>(SettingName.ApiKeyLifetimeDays)),
+                CorrelationId = correlationId
+            };
+
+            ApiKey newApiKeyDbRecord = new()
+            {
+                SourceId = apiKeyToRenew.SourceId,
+                ApiKeyHash = newApiKeyHash,
+                CreatedAt = DateTimeOffset.UtcNow,
+                ExpiresAt = DateTimeOffset.UtcNow.AddDays(_ass.GetSetting<int>(SettingName.ApiKeyLifetimeDays)),
+                Status = KeyStatus.ActiveRenewed
+            };
+
+            //Change old Key to Renewal only
+            apiKeyToRenew.Status = KeyStatus.RenewalOnly;
+
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+
+            try
+            {
+                _db.ApiKeys.Add(newApiKeyDbRecord);
+                _db.ApiKeys.Update(apiKeyToRenew);
+
+                await _db.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return ServiceResult<ApiKeyIssueDto>.Fail(Enums.ServiceError.Database, ex.Message);
+            }
+
+            return ServiceResult<ApiKeyIssueDto>.Ok(newApiKeyReturnToDevice);
         }
     }
 }

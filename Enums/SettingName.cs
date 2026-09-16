@@ -3,6 +3,7 @@
     public enum SettingName
     {
         HealthDbConnectionString,
-        ApiKeyLifetimeDays
+        ApiKeyLifetimeDays,
+        ApiKeyRenewalWindowDays
     }
 }

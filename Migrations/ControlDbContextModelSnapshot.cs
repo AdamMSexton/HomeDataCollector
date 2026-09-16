@@ -19,7 +19,7 @@ namespace HealthDataCollector.Migrations
 
             modelBuilder.Entity("HealthDataCollector.Data.Control.Entities.ApiKey", b =>
                 {
-                    b.Property<long>("id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -42,7 +42,7 @@ namespace HealthDataCollector.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("id");
+                    b.HasKey("Id");
 
                     b.HasIndex("ApiKeyHash")
                         .IsUnique();

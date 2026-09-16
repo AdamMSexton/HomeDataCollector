@@ -12,6 +12,7 @@
 
         ApiKeyNotFound,
         ApiKeyExpired,
+        ApiKeyOutsideRenewalWin,
         ApiKeyRevoked,
         ApiKeyRenewed
 
