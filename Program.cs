@@ -112,7 +112,7 @@ app.MapPost("/api/key/renew", async (HttpContext context, ILogger<Program> Logge
 
         var result = await _ps.StartApiRenewalAsync(correlationId, apiKey);
 
-        return Results.Ok();
+        return Results.Ok(result.Data);
     });
 
 app.MapPost("/api/weight", async(WeightMeasurementDto dto, HttpContext context, ILogger<Program> logger, ISourceService _ps) =>
@@ -135,6 +135,7 @@ app.MapPost("/api/weight", async(WeightMeasurementDto dto, HttpContext context, 
         if (!result.Success)
         {
             logger.LogDebug("API Error: {Error}", result.Message);
+            return Results.Unauthorized();
         }
 
         logger.LogDebug("Device Id: {DeviceId}.", result.Data.ToString());

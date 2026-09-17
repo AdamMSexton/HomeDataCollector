@@ -12,6 +12,7 @@ SCALE_SERVICE = "0000181b-0000-1000-8000-00805f9b34fb"
 
 # CHANGE THIS TO THE ACTUAL ADDRESS SHOWN BY ASP.NET
 API_URL = "https://localhost:7262/api/weight"
+API_KEY = "ENTER_KEY_HERE"
 
 last_data = None
 last_sent_measurement = None
@@ -22,8 +23,13 @@ def generate_measurement_id():
     return random.getrandbits(63)
 
 
-def send_measurement(weight_kg, impedance_ohm, measured_at):
+def send_measurement(weight_kg, impedance_ohm, measured_at, api_url, api_key):
     measurement_id = generate_measurement_id()
+
+    headers = {
+        "X-Api-Key": api_key,
+        "Content-Type": "application/json"
+    }
 
     payload = {
         "measurementId": measurement_id,
@@ -34,12 +40,13 @@ def send_measurement(weight_kg, impedance_ohm, measured_at):
 
     print()
     print("POSTING TO API")
-    print(f"URL:     {API_URL}")
+    print(f"URL:     {api_url}")
     print(f"Payload: {payload}")
 
     try:
         response = requests.post(
             API_URL,
+            headers=headers,
             json=payload,
             timeout=5,
             verify=False
@@ -54,7 +61,7 @@ def send_measurement(weight_kg, impedance_ohm, measured_at):
     print()
 
 
-def callback(device, adv):
+def callback(device, adv, api_url, api_key):
     global last_data
     global last_sent_measurement
 
@@ -184,12 +191,18 @@ def callback(device, adv):
         send_measurement(
             weight_kg,
             impedance_ohm,
-            measured_at
+            measured_at,
+            api_url, 
+            api_key
         )
 
 
-async def main():
-    scanner = BleakScanner(callback)
+async def listen_for_scale(api_url, api_key):
+
+    def scanner_callback(device, adv):
+        callback(device, adv, api_url, api_key)
+
+    scanner = BleakScanner(scanner_callback)
 
     await scanner.start()
 
@@ -208,4 +221,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(listen_for_scale())

@@ -140,7 +140,7 @@ namespace HealthDataCollector.Services
                 LastSeenAt = now,
             };
 
-            var provisioningResult = new ApiKeyIssueDto
+            ApiKeyIssueDto provisioningResult = new()
             {
                 SourceId = sourceId,
                 ApiKey = apiKey,
@@ -150,10 +150,12 @@ namespace HealthDataCollector.Services
 
             await using var transaction = await _db.Database.BeginTransactionAsync();
 
+            newSourceRecord.ApiKeys.Add(newApiRecord);
+
             try
             {
                 _db.Sources.Add(newSourceRecord);
-                _db.ApiKeys.Add(newApiRecord);
+                //_db.ApiKeys.Add(newApiRecord);
 
                 await _db.SaveChangesAsync();
 
@@ -206,13 +208,13 @@ namespace HealthDataCollector.Services
                     }
                 case KeyStatus.ActiveRenewed:
                     {
+                        
                         var renewCompleteResult = await CompleteApiRenewal(matchedApiKey.SourceId, matchedApiKey.Id);
                         if (!renewCompleteResult.Success)
                         {
                             return ServiceResult<Guid>.Fail(renewCompleteResult.Error, renewCompleteResult.Message ?? "Unknown");
                         }
-                        // Find and revoke old key, change new key to KeyStatus.Active
-                        break;
+                        return ServiceResult<Guid>.Ok(matchedApiKey.SourceId);
                     }
                 case KeyStatus.Active:
                     {
@@ -274,7 +276,7 @@ namespace HealthDataCollector.Services
                 ApiKeyHash = newApiKeyHash,
                 CreatedAt = DateTimeOffset.UtcNow,
                 ExpiresAt = DateTimeOffset.UtcNow.AddDays(_ass.GetSetting<int>(SettingName.ApiKeyLifetimeDays)),
-                Status = KeyStatus.ActiveRenewed
+                Status = KeyStatus.ActiveRenewed,
             };
 
             //Change old Key to Renewal only
@@ -285,7 +287,7 @@ namespace HealthDataCollector.Services
             try
             {
                 _db.ApiKeys.Add(newApiKeyDbRecord);
-                _db.ApiKeys.Update(apiKeyToRenew);
+                //_db.ApiKeys.Update(apiKeyToRenew);
 
                 await _db.SaveChangesAsync();
 

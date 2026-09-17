@@ -6,7 +6,7 @@ namespace HealthDataCollector.Data.Control.Entities
     {
         public long Id {  get; set; }
         public Guid SourceId { get; set; }
-        public Source Source { get; set; } = new Source();
+        public Source Source { get; set; } = null!;
         public byte[] ApiKeyHash { get; set; } = new byte[32];
         
         public DateTimeOffset CreatedAt { get; set; }
