@@ -70,13 +70,15 @@ def test_provision():
 def test_renew_key():
     print_keys()
     print("Enter keyname(max 12 characters) or paste API Key:")
-    keyToUse = input(">").lower()
-    if (len(keyToUse) <= 12):
-        if (keyToUse.lower() in key_store):
-            keyToUse = key_store[keyToUse]
+    keyName = input(">").lower()
+    if (len(keyName) <= 12):
+        if (keyName.lower() in key_store):
+            keyToUse = key_store[keyName]
         else:
             input("Key not found.")
             return
+    else:
+        KeyToUse = keyName
 
     headers = {
         "X-Api-Key": keyToUse,
@@ -120,15 +122,15 @@ def test_renew_key():
 def test_dummy_weight():
     print_keys()
     print("Enter keyname(max 12 characters) or paste API Key:")
-    keyToUse = input(">").lower()
-    if (len(keyToUse) <= 12):
-        if (keyToUse.lower() in key_store):
-            keyToUse = key_store[keyToUse]
+    keyName = input(">").lower()
+    if (len(keyName) <= 12):
+        if (keyName.lower() in key_store):
+            keyToUse = key_store[keyName]
         else:
             input("Key not found.")
             return
-        
-    print (keyToUse)
+    else:
+        keyToUse = keyName
 
     weight = float(input("Enter Weight: "))
     impedence = int(input("Enter Impedence: "))
@@ -166,13 +168,15 @@ def test_dummy_weight():
 def run_live_bridge():
     print_keys()
     print("Enter keyname(max 12 characters) or paste API Key:")
-    keyToUse = input(">").lower()
-    if (len(keyToUse) <= 12):
-        if (keyToUse.lower() in key_store):
-            keyToUse = key_store[keyToUse]
+    keyName = input(">").lower()
+    if (len(keyName) <= 12):
+        if (keyName.lower() in key_store):
+            keyToUse = key_store[keyName]
         else:
             input("Key not found.")
             return
+    else:
+        keyToUse = keyName
         
     asyncio.run(listen_for_scale(SUBMIT_WEIGHT_API_URL,keyToUse))
     return

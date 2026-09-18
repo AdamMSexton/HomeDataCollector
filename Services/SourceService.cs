@@ -93,7 +93,7 @@ namespace HealthDataCollector.Services
                 return ServiceResult<ApiKey>.Fail(ServiceError.ApiKeyNotFound, ServiceMessages.ApiKeyNotFound);
             }
 
-            if ((matchedApiKey.Status == KeyStatus.Active) || (matchedApiKey.Status == KeyStatus.RenewalOnly))
+            if ((matchedApiKey.Status == KeyStatus.Active) || (matchedApiKey.Status == KeyStatus.ActiveRenewed) || (matchedApiKey.Status == KeyStatus.RenewalOnly))
             {
                 if (matchedApiKey.ExpiresAt <= DateTimeOffset.UtcNow)
                 {
@@ -248,6 +248,18 @@ namespace HealthDataCollector.Services
             }
 
             var apiKeyToRenew = findApiKeyResult.Data;
+
+            if (apiKeyToRenew.Status == KeyStatus.Expired)
+            {
+                return ServiceResult<ApiKeyIssueDto>.Fail(ServiceError.ApiKeyExpired, ServiceMessages.ApiKeyExpired);
+            }
+
+            if (apiKeyToRenew.Status == KeyStatus.Revoked)
+            {
+                return ServiceResult<ApiKeyIssueDto>.Fail(ServiceError.ApiKeyRevoked, ServiceMessages.ApiKeyRevoked);
+            }
+
+            
 
             DateTimeOffset renewalWindowOpen = apiKeyToRenew.ExpiresAt.AddDays(-1 * _ass.GetSetting<int>(SettingName.ApiKeyRenewalWindowDays));
 

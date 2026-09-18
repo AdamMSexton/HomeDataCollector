@@ -112,6 +112,11 @@ app.MapPost("/api/key/renew", async (HttpContext context, ILogger<Program> Logge
 
         var result = await _ps.StartApiRenewalAsync(correlationId, apiKey);
 
+        if (!result.Success)
+        {
+            return Results.BadRequest(result.Message);
+        }
+
         return Results.Ok(result.Data);
     });
 
