@@ -78,7 +78,7 @@ def test_renew_key():
             input("Key not found.")
             return
     else:
-        KeyToUse = keyName
+        keyToUse = keyName
 
     headers = {
         "X-Api-Key": keyToUse,
