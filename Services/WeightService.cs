@@ -20,16 +20,6 @@ namespace HealthDataCollector.Services
             returnPacket.CorrelationId = correlationId;
             returnPacket.ReceivedAt = receivedAt;
 
-            // Use time transmitted from sender to when received here to determine if the clock on distant end is off signifigantly.
-            // If the difference is more than a minute then use the delta to offset teh measurement time
-            DateTimeOffset? adjustedMeasurementTime = null;
-            TimeSpan transmissionDeltaT = receivedAt - receivedWeight.TransmittedAt;
-            if (Math.Abs(transmissionDeltaT.TotalMinutes) >= 1)
-            {
-                adjustedMeasurementTime = receivedWeight.MeasuredAt.Add(transmissionDeltaT);
-                adjustedMeasurementTime = adjustedMeasurementTime.Value.ToUniversalTime();
-            }
-
             // Filter out erroneous/trash readings
             if ((receivedWeight.WeightKg < 0) || (receivedWeight.WeightKg >= 700))
             {
@@ -41,6 +31,17 @@ namespace HealthDataCollector.Services
             {
                 return ServiceResult<MeasurementAcceptedDto>.Fail(Enums.ServiceError.Validation, "Invalid Impedence.");
             }
+
+            // Use time transmitted from sender to when received here to determine if the clock on distant end is off signifigantly.
+            // If the difference is more than a minute then use the delta to offset teh measurement time
+            DateTimeOffset? adjustedMeasurementTime = null;
+            TimeSpan transmissionDeltaT = receivedAt - receivedWeight.TransmittedAt;
+            if (Math.Abs(transmissionDeltaT.TotalSeconds) >= 10)
+            {
+                adjustedMeasurementTime = receivedWeight.MeasuredAt.Add(transmissionDeltaT);
+                adjustedMeasurementTime = adjustedMeasurementTime.Value.ToUniversalTime();
+            }
+
 
             // Prepare new weight record
             DbWeightRecord newWeightRecord = new()
@@ -65,7 +66,7 @@ namespace HealthDataCollector.Services
                 return ServiceResult<MeasurementAcceptedDto>.Fail(Enums.ServiceError.Database, ex.Message);
             }
 
-            // Determine if we believe theere is more than a 10 second clock difference, if so calculate and add to return packet.
+            // Determine if we believe there is more than a 10 second clock difference, if so calculate and add to return packet.
             int? deltaTSeconds = null;
             if (Math.Abs(transmissionDeltaT.TotalSeconds) > 10)
             {
