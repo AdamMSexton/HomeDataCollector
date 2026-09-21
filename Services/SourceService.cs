@@ -154,7 +154,7 @@ namespace HealthDataCollector.Services
 
             try
             {
-                _db.Sources.Add(newSourceRecord);
+                await _db.Sources.AddAsync(newSourceRecord);
                 //_db.ApiKeys.Add(newApiRecord);
 
                 await _db.SaveChangesAsync();

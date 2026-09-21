@@ -51,7 +51,7 @@ namespace HealthDataCollector.Migrations.HealthDb
                         {
                             t.HasCheckConstraint("CK_WeightMeasurements_ImpedanceOhm", "\"ImpedanceOhm\" IS NULL OR \"ImpedanceOhm\" > 0");
 
-                            t.HasCheckConstraint("CK_WeightMeasurements_WeightKg", "\"WeightKg\" > 0");
+                            t.HasCheckConstraint("CK_WeightMeasurements_WeightKg", "\"WeightKg\" > 0 AND \"WeightKg\" <= 700");
                         });
                 });
 #pragma warning restore 612, 618

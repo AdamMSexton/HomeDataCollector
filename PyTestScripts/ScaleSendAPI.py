@@ -3,14 +3,14 @@ import random
 import requests
 import urllib3
 
-from datetime import datetime
+from datetime import datetime, timezone
 from bleak import BleakScanner
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 SCALE_SERVICE = "0000181b-0000-1000-8000-00805f9b34fb"
 
-# CHANGE THIS TO THE ACTUAL ADDRESS SHOWN BY ASP.NET
+# Used only when running this file directly.
 API_URL = "https://localhost:7262/api/weight"
 API_KEY = "ENTER_KEY_HERE"
 
@@ -32,10 +32,12 @@ def send_measurement(weight_kg, impedance_ohm, measured_at, api_url, api_key):
     }
 
     payload = {
-        "measurementId": measurement_id,
-        "measuredAt": measured_at.isoformat(),
-        "weightKg": weight_kg,
-        "impedanceOhm": impedance_ohm
+        "MeasurementId": measurement_id,
+        "UserId": 1,
+        "MeasuredAt": measured_at.isoformat(),
+        "TransmittedAt": datetime.now(timezone.utc).isoformat(),
+        "WeightKg": weight_kg,
+        "ImpedanceOhm": impedance_ohm
     }
 
     print()
@@ -45,14 +47,14 @@ def send_measurement(weight_kg, impedance_ohm, measured_at, api_url, api_key):
 
     try:
         response = requests.post(
-            API_URL,
+            api_url,
             headers=headers,
             json=payload,
             timeout=5,
             verify=False
         )
 
-        print(f"Status:  {response.status_code}")
+        print(f"Status:   {response.status_code}")
         print(f"Response: {response.text}")
 
     except requests.RequestException as ex:
@@ -98,13 +100,16 @@ def callback(device, adv, api_url, api_key):
     second = data[8]
 
     try:
+        local_timezone = datetime.now().astimezone().tzinfo
+
         measured_at = datetime(
             year,
             month,
             day,
             hour,
             minute,
-            second
+            second,
+            tzinfo=local_timezone
         )
     except ValueError:
         measured_at = None
@@ -168,7 +173,7 @@ def callback(device, adv, api_url, api_key):
             print("Invalid scale timestamp -- not sending.")
             return
 
-        # Avoid sending the same physical reading twice
+        # Avoid sending the same physical reading twice.
         fingerprint = (
             raw_weight,
             raw_impedance,
@@ -192,7 +197,7 @@ def callback(device, adv, api_url, api_key):
             weight_kg,
             impedance_ohm,
             measured_at,
-            api_url, 
+            api_url,
             api_key
         )
 
@@ -221,4 +226,4 @@ async def listen_for_scale(api_url, api_key):
 
 
 if __name__ == "__main__":
-    asyncio.run(listen_for_scale())
+    asyncio.run(listen_for_scale(API_URL, API_KEY))

@@ -7,6 +7,7 @@ using HealthDataCollector.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -136,7 +137,7 @@ app.MapPost("/api/key/renew", async (HttpContext context, ILogger<Program> Logge
         return Results.Ok(result.Data);
     });
 
-app.MapPost("/api/weight", async(WeightMeasurementDto dto, HttpContext context, ILogger<Program> logger, ISourceService _ps) =>
+app.MapPost("/api/weight", async(WeightMeasurementDto dto, HttpContext context, ILogger<Program> logger, ISourceService _ps, IWeightService _ws) =>
     {
         var receivedAt = DateTimeOffset.UtcNow;
         var correlationId = context.TraceIdentifier;
@@ -151,50 +152,28 @@ app.MapPost("/api/weight", async(WeightMeasurementDto dto, HttpContext context, 
             return Results.Unauthorized();
         }
 
-        var result = await _ps.ValidateApiKeyAsync(apiKey);
+        var validationResult = await _ps.ValidateApiKeyAsync(apiKey);
 
-        if (!result.Success)
+        if (!validationResult.Success)
         {
-            logger.LogDebug("API Error: {Error}", result.Message);
+            logger.LogDebug("API Error: {Error}", validationResult.Message);
             return Results.Unauthorized();
         }
 
-        // Use time transmitted from sender to when received here to determine if the clock on distant end is off signifigantly.
-        // If the difference is more than a minute then use the delta to offset teh measurement time
-        DateTimeOffset? adjustedMeasurementTime = null;
-        TimeSpan transmissionDeltaT = receivedAt - dto.TransmittedAt;
-        if (Math.Abs(transmissionDeltaT.TotalMinutes) >= 1)
+        var submissionResult = await _ws.IntakeNewWeightMeasurementAsync(correlationId, receivedAt, validationResult.Data, dto);
+
+        if (!submissionResult.Success)
         {
-            adjustedMeasurementTime = dto.MeasuredAt.Add(transmissionDeltaT);
+            string errorString = $"Submission Error: {submissionResult.Error}, {submissionResult.Message ?? "Unknown"}";
+            logger.LogDebug(errorString);
+            return Results.BadRequest(errorString);
         }
 
-        DbWeightRecord newWeightRecord = new()
-        {
-            SourceId = result.Data,
-            MeasurementId = dto.MeasurementId,
-            UserId = dto.UserId,
-            WeightKg = dto.WeightKg,
-            ImpedanceOhm = dto.ImpedanceOhm,
-            ReceivedAt = receivedAt,
-            MeasuredAt = adjustedMeasurementTime ?? dto.MeasuredAt,
-        };
-
-        
-
-        logger.LogDebug("Device Id: {DeviceId}.", result.Data.ToString());
-
-        logger.LogDebug(
-                    "Received weight measurement {MeasurementId}: " +
-                    "{WeightKg} kg, Impedance={ImpedanceOhm} ohm, " +
-                    "MeasuredAt={MeasuredAt}, ReceivedAt={ReceivedAt}, " +
-                    "CorrelationId={CorrelationId}",
-                    dto.MeasurementId,
-                    dto.WeightKg,
-                    dto.ImpedanceOhm,
-                    dto.MeasuredAt,
-                    receivedAt,
-                    correlationId
-                );
+        logger.LogDebug("Received weight measurement {MeasurementId} @ {ReceivedAt} & CorrelationID: {correlationId}", 
+            dto.MeasurementId,
+            receivedAt,
+            correlationId
+        );
 
         return Results.Ok(new MeasurementAcceptedDto
         {
