@@ -28,8 +28,10 @@ using (var scope = app.Services.CreateScope())
 
     await db.Database.MigrateAsync();
 
-    await DbSeeder.SeedAsync(db);
+    await ControlDbSeeder.SeedAsync(db);
 }
+
+await HealthDataCollector.Data.Health.HealthDbSeeder.SeedAsync(app.Services);
 
 var appState = app.Services.GetRequiredService<IAppStateService>();
 

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HealthDataCollector.Data.Control
 {
-    public class DbSeeder
+    public class ControlDbSeeder
     {
         public static async Task SeedAsync(ControlDbContext db)
         {

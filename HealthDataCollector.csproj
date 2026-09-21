@@ -23,7 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\Health\Entities\" />
     <Folder Include="Middlewear\" />
     <Folder Include="AppData\" />
     <Folder Include="Migrations\" />
