@@ -1,6 +1,7 @@
 using HealthDataCollector.Data.Control;
 using HealthDataCollector.Data.Control.Entities;
 using HealthDataCollector.Data.Health;
+using HealthDataCollector.Data.Health.Entities;
 using HealthDataCollector.Models;
 using HealthDataCollector.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,8 @@ builder.Services.AddDbContext<HealthDbContext>(options =>                       
 builder.Services.AddSingleton<IAppStateService, AppStateService>();         // Register AppStateService for App State, Settings, and Cache data.
 
 builder.Services.AddScoped<ISourceService, SourceService>();       // Register Provisioning services.
+
+builder.Services.AddScoped<IWeightService, WeightService>();        // Register weight service
 
 builder.Services.AddOpenApi();
 
@@ -155,6 +158,28 @@ app.MapPost("/api/weight", async(WeightMeasurementDto dto, HttpContext context, 
             logger.LogDebug("API Error: {Error}", result.Message);
             return Results.Unauthorized();
         }
+
+        // Use time transmitted from sender to when received here to determine if the clock on distant end is off signifigantly.
+        // If the difference is more than a minute then use the delta to offset teh measurement time
+        DateTimeOffset? adjustedMeasurementTime = null;
+        TimeSpan transmissionDeltaT = receivedAt - dto.TransmittedAt;
+        if (Math.Abs(transmissionDeltaT.TotalMinutes) >= 1)
+        {
+            adjustedMeasurementTime = dto.MeasuredAt.Add(transmissionDeltaT);
+        }
+
+        DbWeightRecord newWeightRecord = new()
+        {
+            SourceId = result.Data,
+            MeasurementId = dto.MeasurementId,
+            UserId = dto.UserId,
+            WeightKg = dto.WeightKg,
+            ImpedanceOhm = dto.ImpedanceOhm,
+            ReceivedAt = receivedAt,
+            MeasuredAt = adjustedMeasurementTime ?? dto.MeasuredAt,
+        };
+
+        
 
         logger.LogDebug("Device Id: {DeviceId}.", result.Data.ToString());
 
