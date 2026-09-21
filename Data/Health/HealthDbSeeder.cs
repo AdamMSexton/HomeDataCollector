@@ -4,14 +4,10 @@ namespace HealthDataCollector.Data.Health
 {
     public static class HealthDbSeeder
     {
-        public static async Task SeedAsync(IServiceProvider services)
+        public static async Task SeedAsync(HealthDbContext db)
         {
-            using var scope = services.CreateScope();
-
-            var db = scope.ServiceProvider
-                .GetRequiredService<HealthDbContext>();
-
-            await db.Database.MigrateAsync();
+            // Health DB seed data
+            await Task.CompletedTask;
         }
     }
 }

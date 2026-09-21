@@ -1,5 +1,6 @@
 using HealthDataCollector.Data.Control;
 using HealthDataCollector.Data.Control.Entities;
+using HealthDataCollector.Data.Health;
 using HealthDataCollector.Models;
 using HealthDataCollector.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ControlDbContext>(options =>                                  // Register SQLite Control context for settings and data
     options.UseSqlite(builder.Configuration.GetConnectionString("ControlDatabase")));
+
+builder.Services.AddDbContext<HealthDbContext>(options =>                                   // Register Postgres Control Contexxt for health data
+    options.UseNpgsql(builder.Configuration.GetConnectionString("HealthDatabase")));
 
 builder.Services.AddSingleton<IAppStateService, AppStateService>();         // Register AppStateService for App State, Settings, and Cache data.
 
@@ -31,7 +35,14 @@ using (var scope = app.Services.CreateScope())
     await ControlDbSeeder.SeedAsync(db);
 }
 
-await HealthDataCollector.Data.Health.HealthDbSeeder.SeedAsync(app.Services);
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider
+        .GetRequiredService<HealthDbContext>();
+
+    await db.Database.MigrateAsync();
+    await HealthDbSeeder.SeedAsync(db);
+}
 
 var appState = app.Services.GetRequiredService<IAppStateService>();
 
