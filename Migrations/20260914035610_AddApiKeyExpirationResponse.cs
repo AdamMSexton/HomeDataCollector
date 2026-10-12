@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace HealthDataCollector.Migrations
+namespace HomeDataCollector.Migrations
 {
     /// <inheritdoc />
     public partial class AddApiKeyExpirationResponse : Migration

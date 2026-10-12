@@ -1,4 +1,4 @@
-﻿namespace HealthDataCollector.Enums
+﻿namespace HomeDataCollector.Enums
 {
     public enum SettingName
     {

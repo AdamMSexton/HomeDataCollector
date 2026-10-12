@@ -1,0 +1,6 @@
+@HomeDataCollector_HostAddress = https://localhost:7262
+
+GET {{HomeDataCollector_HostAddress}}/api/health/db
+Accept: application/json
+
+###

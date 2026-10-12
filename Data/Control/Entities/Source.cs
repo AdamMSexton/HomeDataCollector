@@ -1,4 +1,4 @@
-﻿namespace HealthDataCollector.Data.Control.Entities
+﻿namespace HomeDataCollector.Data.Control.Entities
 {
     public class Source
     {

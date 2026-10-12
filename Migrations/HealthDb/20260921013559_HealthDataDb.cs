@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace HealthDataCollector.Migrations.HealthDb
+namespace HomeDataCollector.Migrations.HealthDb
 {
     /// <inheritdoc />
     public partial class HealthDataDb : Migration

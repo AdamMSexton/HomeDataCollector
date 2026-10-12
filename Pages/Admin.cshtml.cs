@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using HealthDataCollector.Services;
+using HomeDataCollector.Services;
 
-namespace HealthDataCollector.Pages
+namespace HomeDataCollector.Pages
 {
     public class AdminModel : PageModel
     {

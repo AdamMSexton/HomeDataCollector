@@ -1,4 +1,4 @@
-﻿namespace HealthDataCollector.Data.Health.Entities
+﻿namespace HomeDataCollector.Data.Health.Entities
 {
     public class DbWeightRecord
     {

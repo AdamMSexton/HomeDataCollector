@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace HealthDataCollector.Migrations.HealthDb
+namespace HomeDataCollector.Migrations.HealthDb
 {
     /// <inheritdoc />
     public partial class HealthDataDb2 : Migration

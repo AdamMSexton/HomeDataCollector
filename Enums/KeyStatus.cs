@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.Design;
 
-namespace HealthDataCollector.Enums
+namespace HomeDataCollector.Enums
 {
     public enum KeyStatus
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace HealthDataCollector.Data.Health
+namespace HomeDataCollector.Data.Health
 {
     public static class HealthDbSeeder
     {

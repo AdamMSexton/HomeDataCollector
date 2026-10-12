@@ -1,7 +1,7 @@
-﻿using HealthDataCollector.Data.Control.Entities;
+﻿using HomeDataCollector.Data.Control.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HealthDataCollector.Data.Control
+namespace HomeDataCollector.Data.Control
 {
     public class ControlDbContext : DbContext
     {

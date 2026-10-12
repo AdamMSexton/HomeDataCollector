@@ -1,6 +1,6 @@
-﻿using HealthDataCollector.Enums;
+﻿using HomeDataCollector.Enums;
 
-namespace HealthDataCollector.Data.Control.Entities
+namespace HomeDataCollector.Data.Control.Entities
 
 {
 

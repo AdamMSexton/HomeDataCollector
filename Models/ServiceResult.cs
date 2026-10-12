@@ -1,6 +1,6 @@
-﻿using HealthDataCollector.Enums;
+﻿using HomeDataCollector.Enums;
 
-namespace HealthDataCollector.Models
+namespace HomeDataCollector.Models
 {
     public class ServiceResult<T>
     {

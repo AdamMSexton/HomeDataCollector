@@ -1,12 +1,12 @@
-﻿using HealthDataCollector.Data.Control;
-using HealthDataCollector.Data.Control.Entities;
-using HealthDataCollector.Enums;
-using HealthDataCollector.Constants;
-using HealthDataCollector.Models;
+﻿using HomeDataCollector.Data.Control;
+using HomeDataCollector.Data.Control.Entities;
+using HomeDataCollector.Enums;
+using HomeDataCollector.Constants;
+using HomeDataCollector.Models;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 
-namespace HealthDataCollector.Services
+namespace HomeDataCollector.Services
 {
     public class SourceService : ISourceService
     {
@@ -127,7 +127,7 @@ namespace HealthDataCollector.Services
                 CreatedAt = now,
                 ExpiresAt = now.AddDays(_ass.GetSetting<int>(SettingName.ApiKeyLifetimeDays)),
                 RenewedAt = null,
-                Status = HealthDataCollector.Enums.KeyStatus.Active
+                Status = HomeDataCollector.Enums.KeyStatus.Active
             };
 
             Source newSourceRecord = new()

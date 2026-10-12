@@ -1,8 +1,8 @@
-﻿using HealthDataCollector.Data.Control.Entities;
-using HealthDataCollector.Enums;
+﻿using HomeDataCollector.Data.Control.Entities;
+using HomeDataCollector.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace HealthDataCollector.Data.Control
+namespace HomeDataCollector.Data.Control
 {
     public class ControlDbSeeder
     {

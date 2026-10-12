@@ -1,9 +1,9 @@
-using HealthDataCollector.Data.Control;
-using HealthDataCollector.Data.Control.Entities;
-using HealthDataCollector.Data.Health;
-using HealthDataCollector.Data.Health.Entities;
-using HealthDataCollector.Models;
-using HealthDataCollector.Services;
+using HomeDataCollector.Data.Control;
+using HomeDataCollector.Data.Control.Entities;
+using HomeDataCollector.Data.Health;
+using HomeDataCollector.Data.Health.Entities;
+using HomeDataCollector.Models;
+using HomeDataCollector.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;

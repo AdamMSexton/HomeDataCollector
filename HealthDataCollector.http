@@ -1,6 +1,0 @@
-@HealthDataCollector_HostAddress = http://localhost:5139
-
-GET {{HealthDataCollector_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

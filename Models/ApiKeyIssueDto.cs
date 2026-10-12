@@ -1,4 +1,4 @@
-﻿namespace HealthDataCollector.Models
+﻿namespace HomeDataCollector.Models
 {
     public class ApiKeyIssueDto
     {

@@ -1,4 +1,4 @@
-﻿namespace HealthDataCollector.Constants;
+﻿namespace HomeDataCollector.Constants;
 
 public static class ServiceMessages
 {

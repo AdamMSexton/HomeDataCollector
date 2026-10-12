@@ -1,10 +1,10 @@
-﻿using HealthDataCollector.Models;
-using HealthDataCollector.Enums;
-using HealthDataCollector.Data.Control.Entities;
-using HealthDataCollector.Data.Control;
+﻿using HomeDataCollector.Models;
+using HomeDataCollector.Enums;
+using HomeDataCollector.Data.Control.Entities;
+using HomeDataCollector.Data.Control;
 using Microsoft.EntityFrameworkCore;
 
-namespace HealthDataCollector.Services
+namespace HomeDataCollector.Services
 {
     public class AppStateService : IAppStateService
     {

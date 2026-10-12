@@ -1,8 +1,8 @@
-﻿using HealthDataCollector.Data.Health;
-using HealthDataCollector.Data.Health.Entities;
-using HealthDataCollector.Models;
+﻿using HomeDataCollector.Data.Health;
+using HomeDataCollector.Data.Health.Entities;
+using HomeDataCollector.Models;
 
-namespace HealthDataCollector.Services
+namespace HomeDataCollector.Services
 {
     public class WeightService : IWeightService
     {

@@ -1,6 +1,6 @@
-﻿using HealthDataCollector.Models;
+﻿using HomeDataCollector.Models;
 
-namespace HealthDataCollector.Services
+namespace HomeDataCollector.Services
 {
     public interface IWeightService
     {

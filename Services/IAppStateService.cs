@@ -1,7 +1,7 @@
-﻿using HealthDataCollector.Enums;
-using HealthDataCollector.Models;
+﻿using HomeDataCollector.Enums;
+using HomeDataCollector.Models;
 
-namespace HealthDataCollector.Services
+namespace HomeDataCollector.Services
 {
     public interface IAppStateService
     {

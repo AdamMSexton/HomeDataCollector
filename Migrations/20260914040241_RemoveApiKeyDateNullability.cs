@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace HealthDataCollector.Migrations
+namespace HomeDataCollector.Migrations
 {
     /// <inheritdoc />
     public partial class RemoveApiKeyDateNullability : Migration
