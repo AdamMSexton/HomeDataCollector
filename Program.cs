@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ControlDbContext>(options =>                                  // Register SQLite Control context for settings and data
