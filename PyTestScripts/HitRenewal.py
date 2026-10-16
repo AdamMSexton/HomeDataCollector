@@ -5,7 +5,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 API_URL = "https://localhost:7262/api/key/renew"
-API_KEY = "01C2EBBDEB9EB945842D5209AFB919B159915C86D58BEE3ED6BF763B79191193"
+API_KEY = ""
 
 headers = {
     "X-Api-Key": API_KEY

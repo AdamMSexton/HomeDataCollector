@@ -3,7 +3,7 @@ import random
 from datetime import datetime, timezone
 
 API_URL = "https://localhost:7262/api/weight"
-API_KEY = "FCEB10384BA4F791FDB87B5659D486A8F323E5401E24473B75CB7518D3D77C4B"
+API_KEY = ""
 
 headers = {
     "X-Api-Key": API_KEY,
